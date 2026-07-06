@@ -4,8 +4,9 @@ import { apiFetch } from './lib/api';
 import Sidebar from './components/Sidebar';
 import CrmHub from './components/CrmHub';
 import FtpBrowser from './components/FtpBrowser';
+// import DeployPackage from './components/DeployPackage';
 import ClientModal from './components/ClientModal';
-import { LayoutDashboard, FolderTree, Menu, Wifi } from 'lucide-react';
+import { LayoutDashboard, FolderTree, PackageOpen, Menu, Wifi } from 'lucide-react';
 
 export default function App() {
   const [clients, setClients] = useState<Client[]>([]);
@@ -19,122 +20,88 @@ export default function App() {
 
   const fetchClients = useCallback(async () => {
     try {
-      setLoading(true);
-      const data = await apiFetch('/api/clients');
-      setClients(data);
-      if (data.length > 0 && !selectedId) {
-        setSelectedId(data[0].id);
-      }
       setLoadError(null);
-    } catch (err: any) {
-      setLoadError(err.message || 'Failed to fetch clients');
+      const data = await apiFetch<Client[]>('/api/clients');
+      setClients(data);
+      setSelectedId(prev => {
+        if (prev && data.some(c => c.id === prev)) return prev;
+        return data.length ? data[0].id : null;
+      });
+    } catch (err) {
+      setLoadError((err as Error).message);
     } finally {
       setLoading(false);
     }
-  }, [selectedId]);
+  }, []);
 
-  useEffect(() => {
-    fetchClients();
-  }, [fetchClients]);
+  useEffect(() => { fetchClients(); }, [fetchClients]);
 
-  const activeClient = useMemo(() => {
-    return clients.find((c) => c.id === selectedId) || null;
-  }, [clients, selectedId]);
+  const selected = useMemo(() => clients.find(c => c.id === selectedId) ?? null, [clients, selectedId]);
 
-  const handleAddClient = () => {
-    setEditingClient(null);
-    setModalOpen(true);
-  };
+  const openAdd = () => { setEditingClient(null); setModalOpen(true); };
+  const openEdit = (c: Client) => { setEditingClient(c); setModalOpen(true); };
 
-  const handleEditClient = (client: Client) => {
-    setEditingClient(client);
-    setModalOpen(true);
-  };
-
-  const handleSaveClient = async () => {
-    setModalOpen(false);
-    await fetchClients();
-  };
-
-  if (loading && clients.length === 0) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-slate-950 text-slate-100">
-        <div className="text-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-indigo-500 border-t-transparent mx-auto"></div>
-          <p className="mt-4 text-slate-400">Loading workspace...</p>
-        </div>
-      </div>
-    );
-  }
+  const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
+    { id: 'crm', label: 'CRM Hub', icon: <LayoutDashboard size={15} /> },
+    { id: 'ftp', label: 'Cloud Browser', icon: <FolderTree size={15} /> },
+    { id: 'deploy', label: 'Deployment Package', icon: <PackageOpen size={15} /> },
+  ];
 
   return (
-    <div className="flex h-screen bg-slate-950 text-slate-100 overflow-hidden font-sans">
+    <div className="flex h-screen overflow-hidden">
       <Sidebar
-        clients={clients}
-        selectedId={selectedId}
-        onSelect={setSelectedId}
-        onAdd={handleAddClient}
         open={sidebarOpen}
-        setOpen={setSidebarOpen}
+        clients={clients}
+        loading={loading}
+        selectedId={selectedId}
+        onSelect={(id) => { setSelectedId(id); if (tab === 'deploy') setTab('crm'); }}
+        onAdd={openAdd}
+        onToggle={() => setSidebarOpen(o => !o)}
       />
 
-      <div className="flex flex-1 flex-col overflow-hidden">
-        <header className="flex h-16 items-center justify-between border-b border-slate-900 bg-slate-950 px-6">
-          <div className="flex items-center gap-4">
-            <button onClick={() => setSidebarOpen(!sidebarOpen)} className="text-slate-400 hover:text-slate-100">
-              <Menu size={20} />
-            </button>
-            <h1 className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
-              <LayoutDashboard className="text-indigo-500" size={22} />
-              FTP Client & CRM Workspace
-            </h1>
+      <div className="flex flex-1 min-w-0 flex-col">
+        {/* Top bar */}
+        <header className="flex items-center gap-2 border-b border-line bg-panel/60 px-3 py-2.5 backdrop-blur sm:px-5">
+          <button
+            onClick={() => setSidebarOpen(o => !o)}
+            className="rounded-lg border border-line p-2 text-slate-400 transition hover:border-indigox/50 hover:text-indigo-300"
+            title="Toggle sidebar"
+          >
+            <Menu size={16} />
+          </button>
+          <nav className="flex flex-1 items-center gap-1 overflow-x-auto">
+            {tabs.map(t => (
+              <button
+                key={t.id}
+                onClick={() => setTab(t.id)}
+                className={`flex shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold transition sm:text-[13px] ${
+                  tab === t.id
+                    ? 'bg-indigox/15 text-indigo-300 ring-1 ring-indigox/40'
+                    : 'text-slate-400 hover:bg-panel-2 hover:text-slate-200'
+                }`}
+              >
+                {t.icon}{t.label}
+              </button>
+            ))}
+          </nav>
+          <div className="hidden items-center gap-2 rounded-full border border-emeraldx/30 bg-emeraldx/10 px-3 py-1.5 text-[11px] font-semibold text-emerald-300 md:flex">
+            <Wifi size={12} className="pulse-dot" /> PASV MODE · TLS
           </div>
-          {activeClient && (
-            <div className="flex items-center gap-6 text-sm">
-              <div className="flex items-center gap-2 text-slate-400">
-                <Wifi size={16} className="text-emerald-500" />
-                <span>Host: <strong className="text-slate-200">{activeClient.ftp_host}</strong></span>
-              </div>
-              <div className="flex rounded-lg bg-slate-900 p-1">
-                <button
-                  onClick={() => setTab('crm')}
-                  className={`rounded-md px-4 py-1.5 font-medium transition-all ${tab === 'crm' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-slate-200'}`}
-                >
-                  CRM Hub
-                </button>
-                <button
-                  onClick={() => setTab('ftp')}
-                  className={`rounded-md px-4 py-1.5 font-medium transition-all flex items-center gap-1.5 ${tab === 'ftp' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-slate-200'}`}
-                >
-                  <FolderTree size={14} />
-                  Web-FTP
-                </button>
-              </div>
-            </div>
-          )}
         </header>
 
-        <main className="flex-1 overflow-y-auto bg-slate-950 p-6">
-          {loadError && (
-            <div className="mb-4 rounded-lg bg-red-950/50 border border-red-900 p-4 text-red-400 text-sm">
-              {loadError}
+        {/* Workspace */}
+        <main className="grid-bg flex-1 overflow-y-auto">
+          {loadError ? (
+            <div className="m-6 rounded-xl border border-red-500/30 bg-red-500/10 p-5 text-sm text-red-300">
+              <p className="font-bold">Workspace failed to load</p>
+              <p className="mt-1 text-red-400/80">{loadError}</p>
+              <button onClick={() => { setLoading(true); fetchClients(); }} className="mt-3 rounded-lg bg-red-500/20 px-4 py-2 text-xs font-bold text-red-200 hover:bg-red-500/30">Retry</button>
             </div>
-          )}
-
-          {activeClient ? (
-            <div className="h-full">
-              {tab === 'crm' && <CrmHub client={activeClient} onEdit={handleEditClient} onRefresh={fetchClients} />}
-              {tab === 'ftp' && <FtpBrowser client={activeClient} />}
-            </div>
+          ) : tab === 'crm' ? (
+            <CrmHub client={selected} clients={clients} loading={loading} onRefresh={fetchClients} onEdit={openEdit} onAdd={openAdd} />
+          ) : tab === 'ftp' ? (
+            <FtpBrowser client={selected} />
           ) : (
-            <div className="flex h-full items-center justify-center text-center">
-              <div>
-                <p className="text-slate-500">No client selected. Add or select a client lead from the sidebar.</p>
-                <button onClick={handleAddClient} className="mt-4 rounded-lg bg-indigo-600 px-4 py-2 font-medium text-white hover:bg-indigo-500 transition-all shadow-lg shadow-indigo-600/20">
-                  Add Your First Client
-                </button>
-              </div>
-            </div>
           )}
         </main>
       </div>
@@ -143,7 +110,11 @@ export default function App() {
         <ClientModal
           client={editingClient}
           onClose={() => setModalOpen(false)}
-          onSave={handleSaveClient}
+          onSaved={async (id) => {
+            setModalOpen(false);
+            await fetchClients();
+            if (id) setSelectedId(id);
+          }}
         />
       )}
     </div>
