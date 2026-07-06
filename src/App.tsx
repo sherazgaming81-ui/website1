@@ -4,9 +4,8 @@ import { apiFetch } from './lib/api';
 import Sidebar from './components/Sidebar';
 import CrmHub from './components/CrmHub';
 import FtpBrowser from './components/FtpBrowser';
-// import DeployPackage from './components/DeployPackage';
 import ClientModal from './components/ClientModal';
-import { LayoutDashboard, FolderTree, PackageOpen, Menu, Wifi } from 'lucide-react';
+import { LayoutDashboard, FolderTree, Menu, Wifi } from 'lucide-react';
 
 export default function App() {
   const [clients, setClients] = useState<Client[]>([]);
@@ -43,8 +42,7 @@ export default function App() {
 
   const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
     { id: 'crm', label: 'CRM Hub', icon: <LayoutDashboard size={15} /> },
-    { id: 'ftp', label: 'Cloud Browser', icon: <FolderTree size={15} /> },
-    { id: 'deploy', label: 'Deployment Package', icon: <PackageOpen size={15} /> },
+    { id: 'ftp', label: 'Cloud Browser', icon: <FolderTree size={15} /> }
   ];
 
   return (
@@ -99,9 +97,8 @@ export default function App() {
             </div>
           ) : tab === 'crm' ? (
             <CrmHub client={selected} clients={clients} loading={loading} onRefresh={fetchClients} onEdit={openEdit} onAdd={openAdd} />
-          ) : tab === 'ftp' ? (
-            <FtpBrowser client={selected} />
           ) : (
+            <FtpBrowser client={selected} />
           )}
         </main>
       </div>
