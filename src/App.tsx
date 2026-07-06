@@ -102,7 +102,6 @@ export default function App() {
           ) : tab === 'ftp' ? (
             <FtpBrowser client={selected} />
           ) : (
-            <DeployPackage />
           )}
         </main>
       </div>
