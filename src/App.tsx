@@ -4,7 +4,7 @@ import { apiFetch } from './lib/api';
 import Sidebar from './components/Sidebar';
 import CrmHub from './components/CrmHub';
 import FtpBrowser from './components/FtpBrowser';
-import DeployPackage from './components/DeployPackage';
+// import DeployPackage from './components/DeployPackage';
 import ClientModal from './components/ClientModal';
 import { LayoutDashboard, FolderTree, PackageOpen, Menu, Wifi } from 'lucide-react';
 
