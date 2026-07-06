@@ -1,0 +1,53 @@
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --color-ink: #020617;
+  --color-panel: #0f172a;
+  --color-panel-2: #1e293b;
+  --color-line: #1e293b;
+  --color-emeraldx: #10b981;
+  --color-indigox: #6366f1;
+  --font-display: 'Sora', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+html, body, #root { height: 100%; }
+
+body {
+  font-family: var(--font-display);
+  background:
+    radial-gradient(ellipse 900px 500px at 85% -10%, rgba(99, 102, 241, 0.14), transparent),
+    radial-gradient(ellipse 700px 420px at -10% 110%, rgba(16, 185, 129, 0.10), transparent),
+    #020617;
+  color: #e2e8f0;
+}
+
+.mono { font-family: var(--font-mono); }
+
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 8px; }
+::-webkit-scrollbar-thumb:hover { background: #334155; }
+
+.glow-emerald { box-shadow: 0 0 24px rgba(16, 185, 129, 0.25); }
+.glow-indigo { box-shadow: 0 0 24px rgba(99, 102, 241, 0.25); }
+
+.grid-bg {
+  background-image:
+    linear-gradient(rgba(99,102,241,0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(99,102,241,0.05) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+.pulse-dot { animation: pulse-dot 1.6s ease-in-out infinite; }
+
+.drop-active {
+  outline: 2px dashed #10b981;
+  outline-offset: -6px;
+  background: rgba(16, 185, 129, 0.06) !important;
+}
